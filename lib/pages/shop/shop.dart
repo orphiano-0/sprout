@@ -10,7 +10,6 @@ class ShopDetailsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Extract the full details from the shop document
     String shopName = shop['name'] ?? 'Unknown Shop';
     String shopAddress = shop['address'] ?? 'No address provided';
     String shopContact = shop['contact'] ?? 'No contact information';
@@ -22,14 +21,26 @@ class ShopDetailsScreen extends StatelessWidget {
     List<dynamic> imageUrls = shop['image_urls'] ?? [];
     String shopImageUrl = imageUrls.isNotEmpty ? imageUrls[0] : '';
 
-    // Set a default image if none is provided
+    // Image widget with fallback
     Widget shopImage = shopImageUrl.isNotEmpty
-        ? Image.network(shopImageUrl, width: 200, height: 200, fit: BoxFit.cover)
-        : const Icon(Icons.image, color: Color.fromARGB(255, 227, 230, 216));
+        ? Image.network(
+            shopImageUrl,
+            width: 200,
+            height: 200,
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) {
+              return const Icon(
+                Icons.broken_image,
+                size: 200,
+                color: Colors.grey,
+              );
+            },
+          )
+        : const Icon(Icons.image, color: Colors.grey, size: 200);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Shop Data'),
+        title: const Text('Shop Details'),
         backgroundColor: const Color.fromARGB(255, 105, 173, 108),
         centerTitle: true,
         elevation: 4,
@@ -40,7 +51,6 @@ class ShopDetailsScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Centering the shop name
               Center(
                 child: Text(
                   shopName,
@@ -53,8 +63,6 @@ class ShopDetailsScreen extends StatelessWidget {
               ),
               const Divider(color: Colors.green, thickness: 1.5),
               const SizedBox(height: 20),
-
-              // Shop Image (Larger size)
               Center(child: shopImage),
               const SizedBox(height: 20),
 

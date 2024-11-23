@@ -30,7 +30,6 @@ class ShopCollections extends StatelessWidget {
             return const Center(child: Text('No plant shops available'));
           }
 
-          // Create a list of plant shops
           final plantShops = snapshot.data!.docs;
 
           return ListView.builder(
@@ -38,7 +37,6 @@ class ShopCollections extends StatelessWidget {
             itemBuilder: (context, index) {
               final shop = plantShops[index];
 
-              // Handle the new fields
               String shopName = shop['name'] ?? 'Unknown Shop';
               String shopAddress = shop['address'] ?? 'No address provided';
               String shopContact = shop['contact'] ?? 'No contact information';
@@ -46,10 +44,22 @@ class ShopCollections extends StatelessWidget {
               List<dynamic> imageUrls = shop['image_urls'] ?? [];
               String shopImageUrl = imageUrls.isNotEmpty ? imageUrls[0] : '';
 
-              // Set a default image if none is provided
+              // Image widget with fallback
               Widget shopImage = shopImageUrl.isNotEmpty
-                  ? Image.network(shopImageUrl, width: 100, height: 100, fit: BoxFit.cover)
-                  : const Icon(Icons.image, color: Colors.grey);
+                  ? Image.network(
+                      shopImageUrl,
+                      width: 100,
+                      height: 100,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return const Icon(
+                          Icons.broken_image,
+                          size: 100,
+                          color: Colors.grey,
+                        );
+                      },
+                    )
+                  : const Icon(Icons.image, color: Colors.grey, size: 100);
 
               return Card(
                 margin: const EdgeInsets.all(10),
@@ -80,7 +90,6 @@ class ShopCollections extends StatelessWidget {
                   trailing: IconButton(
                     icon: const Icon(Icons.arrow_forward, color: Colors.green),
                     onPressed: () {
-                      // Navigate to ShopDetailsScreen when clicked
                       Navigator.push(
                         context,
                         MaterialPageRoute(
