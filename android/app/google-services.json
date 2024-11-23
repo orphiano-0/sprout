@@ -1,0 +1,49 @@
+{
+  "project_info": {
+    "project_number": "209363729098",
+    "firebase_url": "https://fir-input-61e68-default-rtdb.firebaseio.com",
+    "project_id": "fir-input-61e68",
+    "storage_bucket": "fir-input-61e68.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:209363729098:android:2b010da6a93ef516339233",
+        "android_client_info": {
+          "package_name": "com.example.sprout"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDS_qosFXnnlQTrIHvD55ngBGbT-GgjgvA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:209363729098:android:53c189987fe5f745339233",
+        "android_client_info": {
+          "package_name": "com.sproutadmin.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDS_qosFXnnlQTrIHvD55ngBGbT-GgjgvA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
