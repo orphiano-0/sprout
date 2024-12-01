@@ -2,7 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:sprout/widgets/components/auth_button.dart';
 import 'package:sprout/widgets/components/auth_textfield.dart';
-import 'package:sprout/widgets/components/square_tile.dart';
+// import 'package:sprout/widgets/components/square_tile.dart';
 
 class LoginPage extends StatefulWidget {
   final void Function()? onTap;
@@ -94,43 +94,43 @@ class _LoginPageState extends State<LoginPage> {
                 ),
         
                 const SizedBox(height: 25),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 25.0),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Divider(
-                          thickness: 0.5,
-                          color: Colors.grey[400],
-                        ),
-                      ),
+                // Padding(
+                //   padding: const EdgeInsets.symmetric(horizontal: 25.0),
+                //   child: Row(
+                //     children: [
+                //       Expanded(
+                //         child: Divider(
+                //           thickness: 0.5,
+                //           color: Colors.grey[400],
+                //         ),
+                //       ),
         
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 10.0),
-                        child: Text(
-                          'Or continue with',
-                          style: TextStyle(color: Theme.of(context).colorScheme.inversePrimary),
-                        ),
-                      ),
+                //       Padding(
+                //         padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                //         child: Text(
+                //           'Or continue with',
+                //           style: TextStyle(color: Theme.of(context).colorScheme.inversePrimary),
+                //         ),
+                //       ),
         
-                      Expanded(
-                        child: Divider(
-                          thickness: 0.5,
-                          color: Colors.grey[400],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+                //       Expanded(
+                //         child: Divider(
+                //           thickness: 0.5,
+                //           color: Colors.grey[400],
+                //         ),
+                //       ),
+                //     ],
+                //   ),
+                // ),
         
-                const SizedBox(height: 25),
-                const Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    SquareTile(imagePath: "assets/google.png"),
-                    SizedBox(width: 10),
-                  ],
-                ),
+                // const SizedBox(height: 25),
+                // const Row(
+                //   mainAxisAlignment: MainAxisAlignment.center,
+                //   children: [
+                //     SquareTile(imagePath: "assets/google.png"),
+                //     SizedBox(width: 10),
+                //   ],
+                // ),
         
                 const SizedBox(height: 25),
                 Row(

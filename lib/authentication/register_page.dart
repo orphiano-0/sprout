@@ -1,4 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:sprout/widgets/components/auth_button.dart';
 import 'package:sprout/widgets/components/auth_textfield.dart';
@@ -36,10 +37,20 @@ class _RegisterPageState extends State<RegisterPage> {
       'profileImageUrl': null,
       'bio': null,
     });
+
+    // Save additional user data in the Realtime Database
+    // DatabaseReference dbRef = FirebaseDatabase.instance.ref("Moisture_Monitoring/$uid");
+    // await dbRef.set({
+    //   'email': email,
+    //   'moisture_value': 0, // Default value
+    //   'recommended_plants': ["No Data Available"], // Empty list initially
+    //   'type': '', // Default type
+    //   'watering_tips': ["No Data Available"], // Empty list initially
+    // });
   }
 
   void registerUser() async {
-  // Check if passwords match
+    // Check if passwords match
     if (passwordController.text != confirmPsController.text) {
       displayMessageToUser("Passwords don't match!", context);
       return;
@@ -53,7 +64,7 @@ class _RegisterPageState extends State<RegisterPage> {
         password: passwordController.text.trim(),
       );
 
-      // Store username and email in Firestore
+      // Store username and email in Firestore and Realtime Database
       await saveUserData(
         userCredential.user!.uid, // Firebase UID
         usernameController.text.trim(),
@@ -75,6 +86,7 @@ class _RegisterPageState extends State<RegisterPage> {
       displayMessageToUser("An unexpected error occurred", context);
     }
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(

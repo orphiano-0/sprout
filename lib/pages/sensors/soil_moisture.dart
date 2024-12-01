@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:sprout/widgets/components/bottom_navigation.dart';
@@ -12,10 +13,8 @@ class SoilMoisturePage extends StatefulWidget {
 class _SoilMoisturePageState extends State<SoilMoisturePage> {
   final DatabaseReference _databaseReference = FirebaseDatabase.instance.ref("Moisture_Monitoring");
 
-  // Hardcoded email for simulation
-
   // use email logged in email here:
-  final String email = "Gab@gmail.com";
+  String ?email = FirebaseAuth.instance.currentUser?.email;
 
   double soilMoistureLevel = 0;
   String description = "";
@@ -31,7 +30,7 @@ class _SoilMoisturePageState extends State<SoilMoisturePage> {
 
   void _fetchMoistureData() {
     _databaseReference
-        .orderByChild("email")//fetch data using child named "email"
+        .orderByChild("email") // fetch data using child named "email"
         .equalTo(email)
         .onValue
         .listen((event) {
@@ -58,6 +57,50 @@ class _SoilMoisturePageState extends State<SoilMoisturePage> {
     });
   }
 
+  // Function to reset soil moisture in Firebase
+  Future<void> _resetSoilMoisture() async {
+    try {
+      await _databaseReference
+          .orderByChild("email")
+          .equalTo(email)
+          .once()
+          .then((snapshot) {
+        final dataMap = Map<String, dynamic>.from(snapshot.snapshot.value as Map);
+        if (dataMap.isNotEmpty) {
+          final userKey = dataMap.keys.first; // Get the user's unique key
+
+          // Update soil moisture level to 0 in Firebase
+          _databaseReference.child(userKey).update({
+            'moisture_value': 0, // Reset the moisture value to 0
+            'recommended_plants': ["No Data Available"],
+            'type': "",
+            'watering_tips': ["No Data Available"],
+
+          }).then((_) {
+            // Optionally, reset the UI after successful update
+            setState(() {
+              soilMoistureLevel = 0;
+              description = "No data available.";
+              wateringTips = [];
+              recommendedPlants = [];
+            });
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Soil moisture reset successfully')),
+            );
+          }).catchError((error) {
+            // Handle any errors during the update
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Error resetting soil moisture: $error')),
+            );
+          });
+        }
+      });
+    } catch (error) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $error')),
+      );
+    }
+  }
 
   void _showInstructionsDialog() {
     showDialog(
@@ -85,100 +128,103 @@ class _SoilMoisturePageState extends State<SoilMoisturePage> {
     );
   }
 
- @override
-Widget build(BuildContext context) {
-  return Scaffold(
-    appBar: AppBar(
-      title: const Text('Soil Moisture'),
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Soil Moisture'),
         backgroundColor: const Color.fromARGB(255, 105, 173, 108),
         centerTitle: true,
         elevation: 4,
-      actions: [
-        IconButton(
-          icon: const Icon(Icons.help_outline, color: Colors.white),
-          onPressed: _showInstructionsDialog,
-        ),
-      ],
-    ),
-    body: Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Colors.green.shade50, Colors.green.shade200],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.help_outline, color: Colors.white),
+            onPressed: _showInstructionsDialog,
+          ),
+        ],
+        leading: IconButton(
+          icon: const Icon(Icons.refresh, color: Colors.white),
+          onPressed: _resetSoilMoisture, // Reset function triggered here
         ),
       ),
-      child: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                AnimatedContainer(
-                  duration: const Duration(milliseconds: 800),
-                  curve: Curves.easeInOut,
-                  child: Column(
-                    children: [
-                      Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          Container(
-                            width: 180,
-                            height: 180,
-                            decoration: BoxDecoration(
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.green.withOpacity(0.5),
-                                  spreadRadius: 6,
-                                  blurRadius: 10,
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.green.shade50, Colors.green.shade200],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 800),
+                    curve: Curves.easeInOut,
+                    child: Column(
+                      children: [
+                        Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            Container(
+                              width: 180,
+                              height: 180,
+                              decoration: BoxDecoration(
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.green.withOpacity(0.5),
+                                    spreadRadius: 6,
+                                    blurRadius: 10,
+                                  ),
+                                ],
+                                shape: BoxShape.circle,
+                              ),
+                              child: CircularProgressIndicator(
+                                value: soilMoistureLevel / 100,
+                                strokeWidth: 16,
+                                backgroundColor: Colors.grey.shade300,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  _getMoistureColor(soilMoistureLevel),
                                 ),
-                              ],
-                              shape: BoxShape.circle,
-                            ),
-                            child: CircularProgressIndicator(
-                              value: soilMoistureLevel / 100,
-                              strokeWidth: 16,
-                              backgroundColor: Colors.grey.shade300,
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                _getMoistureColor(soilMoistureLevel),
                               ),
                             ),
-                          ),
-                          Text(
-                            '${soilMoistureLevel.toStringAsFixed(0)}%',
-                            style: const TextStyle(
-                              fontSize: 48,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
+                            Text(
+                              '${soilMoistureLevel.toStringAsFixed(0)}%',
+                              style: const TextStyle(
+                                fontSize: 48,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
                             ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 20),
-                      Text(
-                        _getMoistureDescription(soilMoistureLevel),
-                        style: const TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
+                          ],
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: 20),
+                        Text(
+                          _getMoistureDescription(soilMoistureLevel),
+                          style: const TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                const SizedBox(height: 20),
-                _buildPlantAndWateringInfoCard(soilMoistureLevel),
-                if (isLoading) const CircularProgressIndicator(),
-              ],
+                  const SizedBox(height: 20),
+                  _buildPlantAndWateringInfoCard(soilMoistureLevel),
+                  if (isLoading) const CircularProgressIndicator(),
+                ],
+              ),
             ),
           ),
         ),
       ),
-    ),
-    bottomNavigationBar: const AppBottomNavigationBar(selectedIndex: 0),
-  );
-}
-
+      bottomNavigationBar: const AppBottomNavigationBar(selectedIndex: 0),
+    );
+  }
 
   Widget _buildPlantAndWateringInfoCard(double soilMoistureLevel) {
     return Padding(
@@ -252,31 +298,31 @@ Widget build(BuildContext context) {
     );
   }
 
-  Color _getMoistureColor(double moistureLevel) {
-    if (moistureLevel <= 20) {
-      return Colors.redAccent;
-    } else if (moistureLevel <= 40) {
-      return Colors.orangeAccent;
-    } else if (moistureLevel <= 60) {
-      return Colors.yellowAccent;
-    } else if (moistureLevel <= 80) {
-      return Colors.lightGreenAccent;
+  String _getMoistureDescription(double moisture) {
+    if (moisture < 20) {
+      return 'Too Dry';
+    } else if (moisture < 40) {
+      return 'Dry';
+    } else if (moisture < 60) {
+      return 'Moderate';
+    } else if (moisture < 80) {
+      return 'Moist';
     } else {
-      return Colors.green;
+      return 'Saturated';
     }
   }
 
-  String _getMoistureDescription(double moistureLevel) {
-    if (moistureLevel <= 20) {
-      return '🌵 Very Dry';
-    } else if (moistureLevel <= 40) {
-      return '💧 Dry';
-    } else if (moistureLevel <= 60) {
-      return '🌱 Optimal';
-    } else if (moistureLevel <= 80) {
-      return '💦 Moist';
+  Color _getMoistureColor(double moisture) {
+    if (moisture < 20) {
+      return Colors.red.shade700;
+    } else if (moisture < 40) {
+      return Colors.orange.shade600;
+    } else if (moisture < 60) {
+      return Colors.yellow.shade600;
+    } else if (moisture < 80) {
+      return Colors.lightGreen.shade600;
     } else {
-      return '🌊 Very Wet';
+      return Colors.green.shade700;
     }
   }
 }

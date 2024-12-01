@@ -19,11 +19,27 @@ class PlantDataDisplay extends StatelessWidget {
       final String commonName = suggestion['details']?['common_names']?[0] ?? 'Unknown';
       final String scientificName = suggestion['details']?['taxonomy']?['genus'] ?? 'Unknown';
       final String description = suggestion['details']?['description']?['value'] ?? 'No description available.';
+      final String synonyms = suggestion['details']?['synonyms']?.sublist(0, 2).join(', ') ?? 'None';
+      final String edibleParts = suggestion['details']?['edible_parts']?.join(', ') ?? 'Not specified';
+      final String wateringNeeds = suggestion['details']?['best_watering'] ?? 'Not specified';
+      final String lightConditions = suggestion['details']?['best_light_condition'] ?? 'Not specified';
+      final String soilType = suggestion['details']?['best_soil_type'] ?? 'Not specified';
+      final String toxicityType = suggestion['details']?['toxicity'] ?? 'Not specified';
+      final String commonUses = suggestion['details']?['common_uses'] ?? 'Not specified';
+      final String culturalSignificance = suggestion['details']?['cultural_significance'] ?? 'Not specified';
 
       final plantData = {
         'common_name': commonName,
         'scientific_name': scientificName,
         'description': description,
+        'synonyms': synonyms,
+        'edible_parts': edibleParts,
+        'watering_needs': wateringNeeds,
+        'light_conditions': lightConditions,
+        'soil_type': soilType,
+        'toxicity_type': toxicityType,
+        'common_uses': commonUses,
+        'cultural_significance': culturalSignificance,
         'timestamp': FieldValue.serverTimestamp(),
       };
 

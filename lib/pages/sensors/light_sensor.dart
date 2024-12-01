@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:light_sensor/light_sensor.dart';
-import 'lux_data.dart';
+import 'lux_levels_plantcare.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart'; 
 
 class LightSensorWidget extends StatefulWidget {
@@ -30,7 +30,7 @@ class _LightSensorWidgetState extends State<LightSensorWidget> {
         });
       });
     } else {
-        setState(() {
+      setState(() {
         luxValue = -1;
       });
       ScaffoldMessenger.of(context).showSnackBar(
@@ -142,12 +142,12 @@ class _LightSensorWidgetState extends State<LightSensorWidget> {
 
   Widget _buildPlantAndLightInfoCard(int luxValue) {
     final luxCategory = _getLuxCategory(luxValue);
-    final plantData = luxData['lux_data'].firstWhere(
-      (data) => data['lux_range'] == luxCategory,
+    final luxInfo = luxData['lux_levels'].firstWhere(
+      (data) => data['range'] == luxCategory,
       orElse: () => null,
     );
 
-    if (plantData == null) return const SizedBox.shrink();
+    if (luxInfo == null) return const SizedBox.shrink();
 
     return Padding(
       padding: const EdgeInsets.all(16.0),
@@ -160,59 +160,41 @@ class _LightSensorWidgetState extends State<LightSensorWidget> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                "Plant and Light Info 🌱",
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.green,
-                ),
-              ),
-              const Divider(color: Colors.green),
-              const SizedBox(height: 10),
-              // Displaying recommended plants
-              const Text(
-                "Recommended Plants:",
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              Text(
+                "Lux Range: ${luxInfo['range']}",
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.green),
               ),
               const SizedBox(height: 10),
-              for (var plant in plantData['plants'])
+              Text(
+                luxInfo['description'],
+                style: const TextStyle(fontSize: 16),
+              ),
+              const SizedBox(height: 20),
+              const Text("Care Tips:", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 10),
+              for (var tip in luxInfo['tips'])
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 4.0),
                   child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text("• ", style: TextStyle(fontSize: 16)),
-                      Expanded(
-                        child: Text(
-                          plant,
-                          style: const TextStyle(fontSize: 16),
-                        ),
-                      ),
+                      Expanded(child: Text(tip, style: const TextStyle(fontSize: 16))),
                     ],
                   ),
                 ),
               const SizedBox(height: 20),
-              // Displaying description and benefits
-              const Text(
-                "Description:",
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
+              const Text("Suitable Plants:", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
               const SizedBox(height: 10),
-              Text(
-                plantData['description'],
-                style: const TextStyle(fontSize: 16),
-              ),
-              const SizedBox(height: 20),
-              const Text(
-                "Benefits:",
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 10),
-              Text(
-                plantData['benefits'],
-                style: const TextStyle(fontSize: 16),
-              ),
+              for (var plant in luxInfo['suitable_plants'])
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4.0),
+                  child: Row(
+                    children: [
+                      const Text("• ", style: TextStyle(fontSize: 16)),
+                      Expanded(child: Text(plant, style: const TextStyle(fontSize: 16))),
+                    ],
+                  ),
+                ),
             ],
           ),
         ),
@@ -221,56 +203,32 @@ class _LightSensorWidgetState extends State<LightSensorWidget> {
   }
 
   String _getLuxCategory(int lux) {
-    if (lux <= 500) {
-      return '0-500';
-    } else if (lux <= 2000) {
-      return '501-2000';
-    } else if (lux <= 10000) {
-      return '2001-10000';
-    } else if (lux <= 20000) {
-      return '10001-20000';
-    } else if (lux <= 50000) {
-      return '20001-50000';
-    } else if (lux <= 100000) {
-      return '50001-100000';
-    } else {
-      return '100000+';
-    }
+    if (lux <= 50) return '0-50';
+    if (lux <= 200) return '50-200';
+    if (lux <= 500) return '200-500';
+    if (lux <= 1000) return '500-1000';
+    if (lux <= 10000) return '1000-10000';
+    if (lux <= 100000) return '10000-100000';
+    return '100000+';
   }
 
   Color _getLightColor(int lux) {
-    if (lux <= 500) {
-      return Colors.blueGrey;
-    } else if (lux <= 2000) {
-      return Colors.green.shade700;
-    } else if (lux <= 10000) {
-      return Colors.green;
-    } else if (lux <= 20000) {
-      return Colors.lightGreen;
-    } else if (lux <= 50000) {
-      return Colors.yellow;
-    } else if (lux <= 100000) {
-      return Colors.orange;
-    } else {
-      return Colors.red;
-    }
+    if (lux <= 50) return Colors.blueGrey;
+    if (lux <= 200) return Colors.green.shade700;
+    if (lux <= 500) return Colors.green;
+    if (lux <= 1000) return Colors.lightGreen;
+    if (lux <= 10000) return Colors.yellow;
+    if (lux <= 100000) return Colors.orange;
+    return Colors.orange;
   }
 
   String _getLightDescription(int lux) {
-    if (lux <= 500) {
-      return '☀️ Low Light';
-    } else if (lux <= 2000) {
-      return '☀️ Medium/Indirect Light';
-    } else if (lux <= 10000) {
-      return '☀️ Bright Indirect Light';
-    } else if (lux <= 20000) {
-      return '☀️ Partial Sun/Filtered Sunlight';
-    } else if (lux <= 50000) {
-      return '☀️ Full Sun';
-    } else if (lux <= 100000) {
-      return '☀️ High-Intensity Direct Sunlight';
-    } else {
-      return '☀️ Extremely High Light';
-    }
+    if (lux <= 50) return '☀️ Very Low Light';
+    if (lux <= 200) return '☀️ Low Light';
+    if (lux <= 500) return '☀️ Moderate Light';
+    if (lux <= 1000) return '☀️ Bright Indirect Light';
+    if (lux <= 10000) return '☀️ Full Sunlight';
+    if (lux <= 100000) return '☀️ Full Sunlight';
+    return '☀️ Extreme Sunlight';
   }
 }
