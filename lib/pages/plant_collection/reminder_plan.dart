@@ -6,6 +6,9 @@ import 'package:intl/intl.dart';
 import 'package:sprout/main.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:sprout/pages/plant_collection/components/reminder_dialogue.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+
+import 'components/edit_reminder.dart';
 
 class ReminderPlanWidget extends StatefulWidget {
   final String plantId; // Plant document ID
@@ -60,6 +63,20 @@ class _ReminderPlanWidgetState extends State<ReminderPlanWidget> {
   }
 
   Future<void> _scheduleNotification(String reminderId, String activity, DateTime reminderDate) async {
+    final now = DateTime.now();
+
+    // Check if the reminder date is today and matches the current time
+    if (reminderDate.year == now.year &&
+        reminderDate.month == now.month &&
+        reminderDate.day == now.day &&
+        reminderDate.hour == now.hour &&
+        reminderDate.minute == now.minute) {
+      
+      // Send notification via Firebase Messaging
+      await _sendFirebaseNotification(reminderId, activity);
+    }
+
+    // Schedule a local notification if you still want to notify locally
     const AndroidNotificationDetails androidPlatformChannelSpecifics = AndroidNotificationDetails(
       'plant_reminders_channel',
       'Plant Reminders',
@@ -80,6 +97,30 @@ class _ReminderPlanWidgetState extends State<ReminderPlanWidget> {
       androidScheduleMode: AndroidScheduleMode.inexact,
       uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
     );
+  }
+
+  Future<void> _sendFirebaseNotification(String reminderId, String activity) async {
+    try {
+      // Send the notification using Firebase Cloud Messaging
+      final FirebaseMessaging messaging = FirebaseMessaging.instance;
+
+      await messaging.requestPermission();
+      final token = await messaging.getToken(); // Get the FCM token for the device
+
+      if (token != null) {
+        await FirebaseFirestore.instance.collection('notifications').add({
+          'title': 'Reminder',
+          'body': activity,
+          'token': token,
+          'reminder_id': reminderId,
+          'timestamp': FieldValue.serverTimestamp(),
+        });
+
+        // You can also directly trigger a notification using Firebase Cloud Functions, or handle it on the client side.
+      }
+    } catch (e) {
+      print("Error sending FCM notification: $e");
+    }
   }
 
   Future<void> _deleteReminder(String reminderId) async {
@@ -159,45 +200,99 @@ class _ReminderPlanWidgetState extends State<ReminderPlanWidget> {
                     final reminderDate = (reminder['reminder_date'] as Timestamp).toDate();
                     final formattedDate = DateFormat('MMMM dd, yyyy - hh:mm a').format(reminderDate);
 
-                    return Card(
-                      elevation: 2,
-                      margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 1),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                      child: Padding(
-                        padding: const EdgeInsets.all(12.0),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(formattedDate, style: TextStyle(fontSize: 12, color: Colors.grey[600])),
-                                const SizedBox(height: 4),
-                                Text(activity, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+                    return Dismissible(
+                      key: Key(reminderId),
+                      onDismissed: (direction) async {
+                        if (direction == DismissDirection.endToStart) {
+                          // Handle delete
+                          final confirm = await showDialog<bool>(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              title: const Text('Delete Reminder'),
+                              content: const Text('Are you sure you want to delete this reminder?'),
+                              actions: [
+                                TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+                                TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Delete')),
                               ],
                             ),
-                            IconButton(
-                              icon: const Icon(Icons.delete, color: Colors.grey),
-                              onPressed: () async {
-                                final confirm = await showDialog<bool>(
-                                  context: context,
-                                  builder: (context) => AlertDialog(
-                                    title: const Text('Delete Reminder'),
-                                    content: const Text('Are you sure you want to delete this reminder?'),
-                                    actions: [
-                                      TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
-                                      TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Delete')),
-                                    ],
-                                  ),
-                                );
+                          );
 
-                                if (confirm == true) {
-                                  await _deleteReminder(reminderId);
-                                }
-                              },
+                          if (confirm == true) {
+                            await _deleteReminder(reminderId);
+                          }
+                        } else if (direction == DismissDirection.startToEnd) {
+                          // Handle edit
+                          showDialog(
+                            context: context,
+                            builder: (context) => EditReminderDialog(
+                              reminderId: reminderId,
+                              plantId: widget.plantId,
+                              currentActivity: activity,
+                              currentReminderDate: reminderDate,
+                              userEmail: userEmail!,
                             ),
+                          );
+                        }
+                        setState(() {}); // Refresh after delete or edit
+                      },
+                      background: Container(
+                        decoration: const BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [Colors.blue, Colors.lightBlueAccent],
+                            begin: Alignment.centerLeft,
+                            end: Alignment.centerRight,
+                          ),
+                        ),
+                        alignment: Alignment.centerLeft,
+                        padding: const EdgeInsets.only(left: 20),
+                        child: const Row(
+                          children: const [
+                            Icon(Icons.edit, color: Colors.white, size: 28),
+                            SizedBox(width: 8),
+                            Text('Edit', style: TextStyle(color: Colors.white, fontSize: 16)),
                           ],
+                        ),
+                      ),
+                      secondaryBackground: Container(
+                        decoration: const BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [Colors.red, Colors.redAccent],
+                            begin: Alignment.centerLeft,
+                            end: Alignment.centerRight,
+                          ),
+                        ),
+                        alignment: Alignment.centerRight,
+                        padding: const EdgeInsets.only(right: 20),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: const [
+                            Icon(Icons.delete, color: Colors.white, size: 28),
+                            SizedBox(width: 8),
+                            Text('Delete', style: TextStyle(color: Colors.white, fontSize: 16)),
+                          ],
+                        ),
+                      ),
+                      child: Card(
+                        elevation: 2,
+                        margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 1),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        child: Padding(
+                          padding: const EdgeInsets.all(12.0),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(formattedDate, style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+                                  const SizedBox(height: 4),
+                                  Text(activity, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+                                ],
+                              ),
+                              const Icon(Icons.swipe, color: Colors.grey),
+                            ],
+                          ),
                         ),
                       ),
                     );

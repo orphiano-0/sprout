@@ -98,7 +98,7 @@ class _BudChatbotState extends State<BudChatbot> {
     } catch (e) {
       final chatState = context.read<ChatState>();
       chatState.messages.removeWhere((message) => message.containsValue("BUD is typing..."));
-      chatState.addMessage('Error: $e', true);
+      chatState.addMessage('Can you explain it to me again? 🌱', true);
     }
   }
 
