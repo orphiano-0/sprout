@@ -13,13 +13,12 @@ class SoilMoisturePage extends StatefulWidget {
 class _SoilMoisturePageState extends State<SoilMoisturePage> {
   final DatabaseReference _databaseReference = FirebaseDatabase.instance.ref("Moisture_Monitoring");
 
-  // use email logged in email here:
   String ?email = FirebaseAuth.instance.currentUser?.email;
 
   double soilMoistureLevel = 0;
   String description = "";
-  List<String> wateringTips = [];
-  List<String> recommendedPlants = [];
+  String wateringTips = "";
+  String plants = "";
   bool isLoading = true;
 
   @override
@@ -30,7 +29,7 @@ class _SoilMoisturePageState extends State<SoilMoisturePage> {
 
   void _fetchMoistureData() {
     _databaseReference
-        .orderByChild("email") // fetch data using child named "email"
+        .orderByChild("email")
         .equalTo(email)
         .onValue
         .listen((event) {
@@ -40,23 +39,22 @@ class _SoilMoisturePageState extends State<SoilMoisturePage> {
 
         setState(() {
           soilMoistureLevel = double.parse(data['moisture_value'].toString());
-          description = data['type'];
-          wateringTips = List<String>.from(data['watering_tips']);
-          recommendedPlants = List<String>.from(data['recommended_plants']);
+          description = data['description'];
+          wateringTips = data['tips'];
+          // plants = data['plant_name'];
           isLoading = false;
         });
       } else {
         setState(() {
           isLoading = false;
           description = "No data available for this user.";
-          wateringTips = [];
-          recommendedPlants = [];
+          wateringTips = "No data available for this user.";
+          // plants = "No data available for this user.";
           soilMoistureLevel = 0;
         });
       }
     });
   }
-
   // Function to reset soil moisture in Firebase
   Future<void> _resetSoilMoisture() async {
     try {
@@ -69,23 +67,21 @@ class _SoilMoisturePageState extends State<SoilMoisturePage> {
         if (dataMap.isNotEmpty) {
           final userKey = dataMap.keys.first; // Get the user's unique key
 
-          // Update soil moisture level to 0 in Firebase
           _databaseReference.child(userKey).update({
-            'moisture_value': 0, // Reset the moisture value to 0
-            'recommended_plants': ["No Data Available"],
-            'type': "",
-            'watering_tips': ["No Data Available"],
+            'moisture_value': 0, 
+            // 'plant_name': "",
+            'description': "",
+            'tips': "",
 
           }).then((_) {
-            // Optionally, reset the UI after successful update
             setState(() {
               soilMoistureLevel = 0;
               description = "No data available.";
-              wateringTips = [];
-              recommendedPlants = [];
+              wateringTips = "";
+              plants = "";
             });
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Soil moisture reset successfully')),
+              const SnackBar(content: Text('Soil moisture reset successfully')),
             );
           }).catchError((error) {
             // Handle any errors during the update
@@ -132,7 +128,7 @@ class _SoilMoisturePageState extends State<SoilMoisturePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Soil Moisture'),
+        title: const Text('Soil Moisture: Reader'),
         backgroundColor: const Color.fromARGB(255, 105, 173, 108),
         centerTitle: true,
         elevation: 4,
@@ -248,49 +244,37 @@ class _SoilMoisturePageState extends State<SoilMoisturePage> {
               ),
               const Divider(color: Colors.green),
               const SizedBox(height: 10),
-              const Text(
-                "Watering Tips:",
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              Text(
+                "Plant Name: $plants",
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 10),
-              for (var tip in wateringTips)
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 4.0),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text("• ", style: TextStyle(fontSize: 16)),
-                      Expanded(
-                        child: Text(
-                          tip,
-                          style: const TextStyle(fontSize: 16),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+              const Text(
+                "Description:",
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 5),
+              Text(
+                description.isNotEmpty
+                    ? description
+                    : "No description available for this plant.",
+                style: const TextStyle(fontSize: 16),
+              ),
               const SizedBox(height: 20),
               const Text(
-                "Recommended Plants:",
+                "Tips:",
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
-              const SizedBox(height: 10),
-              for (var plant in recommendedPlants)
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 4.0),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text("• ", style: TextStyle(fontSize: 16)),
-                      Expanded(
-                        child: Text(
-                          plant,
-                          style: const TextStyle(fontSize: 16),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+              const SizedBox(height: 5),
+              Text(
+                wateringTips.isNotEmpty
+                    ? wateringTips
+                    : "No tips available for this moisture level.",
+                style: const TextStyle(fontSize: 16),
+              ),
             ],
           ),
         ),
@@ -299,28 +283,28 @@ class _SoilMoisturePageState extends State<SoilMoisturePage> {
   }
 
   String _getMoistureDescription(double moisture) {
-    if (moisture < 20) {
-      return 'Too Dry';
-    } else if (moisture < 40) {
-      return 'Dry';
-    } else if (moisture < 60) {
-      return 'Moderate';
-    } else if (moisture < 80) {
-      return 'Moist';
+    if (moisture <= 20) {
+      return 'Very Dry Soil';
+    } else if (moisture <= 40) {
+      return 'Moderately Dry Soil';
+    } else if (moisture <= 60) {
+      return 'Moist Soil';
+    } else if (moisture <= 80) {
+      return 'Wet Soil';
     } else {
-      return 'Saturated';
+      return 'Waterlogged Soil';
     }
   }
 
   Color _getMoistureColor(double moisture) {
-    if (moisture < 20) {
-      return Colors.red.shade700;
-    } else if (moisture < 40) {
-      return Colors.orange.shade600;
-    } else if (moisture < 60) {
-      return Colors.yellow.shade600;
-    } else if (moisture < 80) {
-      return Colors.lightGreen.shade600;
+    if (moisture <= 20) {
+      return Colors.red.shade300;
+    } else if (moisture <= 40) {
+      return Colors.orange.shade300;
+    } else if (moisture <= 60) {
+      return Colors.yellow.shade300;
+    } else if (moisture <= 80) {
+      return Colors.lightGreen.shade300;
     } else {
       return Colors.green.shade700;
     }

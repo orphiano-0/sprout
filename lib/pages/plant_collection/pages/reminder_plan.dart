@@ -4,10 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:intl/intl.dart';
 import 'package:sprout/main.dart';
-import 'package:timezone/timezone.dart' as tz;
 import 'package:sprout/pages/plant_collection/components/reminder_dialogue.dart';
 
-import 'components/edit_reminder.dart';
+import '../components/edit_reminder.dart';
 
 class ReminderPlanWidget extends StatefulWidget {
   final String plantId; // Plant document ID
@@ -27,6 +26,7 @@ class ReminderPlanWidget extends StatefulWidget {
 
 class _ReminderPlanWidgetState extends State<ReminderPlanWidget> {
   final String? userEmail = FirebaseAuth.instance.currentUser?.email;
+  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
 
   Future<List<Map<String, dynamic>>> _fetchReminders() async {
     try {

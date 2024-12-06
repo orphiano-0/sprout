@@ -1,8 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:sprout/pages/plant_collection/pages/soil_moisture_page.dart';
 import 'plant_reminder.dart'; // Import the PlantReminder page
-import 'plant_details.dart'; // Import the PlantDetails page
+import 'pages/plant_details.dart'; // Import the PlantDetails page
 
 class PlantCollection extends StatelessWidget {
   const PlantCollection({super.key});
@@ -158,7 +159,6 @@ class PlantCollection extends StatelessWidget {
                     ],
                   ),
                 ),
-
                 child: Card(
                   margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   shape: RoundedRectangleBorder(
@@ -213,7 +213,8 @@ class PlantCollection extends StatelessWidget {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            ElevatedButton.icon(
+                            // Button for setting a reminder
+                            IconButton(
                               onPressed: () {
                                 Navigator.push(
                                   context,
@@ -226,19 +227,13 @@ class PlantCollection extends StatelessWidget {
                                   ),
                                 );
                               },
-                              icon: const Icon(Icons.alarm),
-                              label: const Text('Set Reminder'),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.green,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                              ),
+                              icon: const Icon(Icons.alarm, color: Colors.green),
+                              tooltip: 'Set Reminder',
                             ),
-                            ElevatedButton.icon(
+                            // Button for viewing plant details
+                            IconButton(
                               onPressed: () {
-                                final userEmail =
-                                    FirebaseAuth.instance.currentUser?.email;
+                                final userEmail = FirebaseAuth.instance.currentUser?.email;
                                 if (userEmail != null) {
                                   Navigator.push(
                                     context,
@@ -251,14 +246,21 @@ class PlantCollection extends StatelessWidget {
                                   );
                                 }
                               },
-                              icon: const Icon(Icons.info_outline),
-                              label: const Text('View Details'),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.blue,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                              ),
+                              icon: const Icon(Icons.info_outline, color: Colors.blue),
+                              tooltip: 'View Details',
+                            ),
+                            // Button for soil moisture monitoring
+                            IconButton(
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => SoilMoisturePage(selectedPlantName: plantName,),
+                                  ),
+                                );
+                              },
+                              icon: const Icon(Icons.water_drop_outlined, color: Colors.teal),
+                              tooltip: 'Moisture Monitoring',
                             ),
                           ],
                         ),

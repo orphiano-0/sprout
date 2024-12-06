@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:sprout/pages/plant_collection/reminder_plan.dart';
+import 'package:sprout/pages/plant_collection/pages/reminder_plan.dart';
 
 class PlantReminder extends StatelessWidget {
   final String plantId;
