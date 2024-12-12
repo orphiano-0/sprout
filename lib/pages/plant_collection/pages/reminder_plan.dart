@@ -3,7 +3,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:intl/intl.dart';
-import 'package:sprout/main.dart';
 import 'package:sprout/pages/plant_collection/components/reminder_dialogue.dart';
 
 import '../components/edit_reminder.dart';
