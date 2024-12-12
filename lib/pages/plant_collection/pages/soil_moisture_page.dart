@@ -63,7 +63,14 @@ class _SoilMoisturePageState extends State<SoilMoisturePage> {
           if (value['plant_name'] == widget.selectedPlantName && value['email'] == email) {
             setState(() {
               soilMoistureLevel = double.parse(value['moisture_value'].toString());
-              description = value['description'] ?? "No type available";
+
+              // Handle description: if it's a list, use the first element; otherwise, use as-is
+              if (value['description'] is List && value['description'].isNotEmpty) {
+                description = value['description'][0] ?? "No description available";
+              } else {
+                description = value['description'] ?? "No description available";
+              }
+
               type = value['type'] ?? "No type available";
               plantName = value['plant_name'] ?? "Unknown Plant";
 
@@ -98,6 +105,7 @@ class _SoilMoisturePageState extends State<SoilMoisturePage> {
       }
     });
   }
+
 
 
   Future<void> _sendLocalNotification() async {

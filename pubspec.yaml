@@ -58,6 +58,7 @@ dependencies:
   onesignal_flutter: ^5.2.8
   pusher_beams: ^1.1.1
   workmanager: ^0.5.2
+  shimmer: ^3.0.0
 
 dev_dependencies:
   flutter_test:

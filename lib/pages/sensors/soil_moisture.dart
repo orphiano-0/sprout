@@ -12,12 +12,11 @@ class SoilMoisturePage extends StatefulWidget {
 
 class _SoilMoisturePageState extends State<SoilMoisturePage> {
   final DatabaseReference _databaseReference = FirebaseDatabase.instance.ref("Moisture_Monitoring");
-
-  String ?email = FirebaseAuth.instance.currentUser?.email;
+  String? email = FirebaseAuth.instance.currentUser?.email;
 
   double soilMoistureLevel = 0;
-  String description = "";
-  String wateringTips = "";
+  List<String> description = [];
+  List<String> wateringTips = [];
   String plants = "";
   bool isLoading = true;
 
@@ -28,63 +27,52 @@ class _SoilMoisturePageState extends State<SoilMoisturePage> {
   }
 
   void _fetchMoistureData() {
-    _databaseReference
-        .orderByChild("email")
-        .equalTo(email)
-        .onValue
-        .listen((event) {
+    _databaseReference.orderByChild("email").equalTo(email).onValue.listen((event) {
       if (event.snapshot.value != null) {
         final dataMap = Map<String, dynamic>.from(event.snapshot.value as Map);
         final data = dataMap.values.first;
 
         setState(() {
           soilMoistureLevel = double.parse(data['moisture_value'].toString());
-          description = data['description'];
-          wateringTips = data['tips'];
-          // plants = data['plant_name'];
+          description = List<String>.from(data['description'] ?? []);
+          wateringTips = List<String>.from(data['tips'] ?? []);
+          plants = data['plant_name'] ?? "No plant name available";
           isLoading = false;
         });
       } else {
         setState(() {
           isLoading = false;
-          description = "No data available for this user.";
-          wateringTips = "No data available for this user.";
-          // plants = "No data available for this user.";
+          description = ["No description available for this user."];
+          wateringTips = ["No tips available for this user."];
+          plants = "No plant name available";
           soilMoistureLevel = 0;
         });
       }
     });
   }
-  // Function to reset soil moisture in Firebase
+
   Future<void> _resetSoilMoisture() async {
     try {
-      await _databaseReference
-          .orderByChild("email")
-          .equalTo(email)
-          .once()
-          .then((snapshot) {
+      await _databaseReference.orderByChild("email").equalTo(email).once().then((snapshot) {
         final dataMap = Map<String, dynamic>.from(snapshot.snapshot.value as Map);
         if (dataMap.isNotEmpty) {
-          final userKey = dataMap.keys.first; // Get the user's unique key
+          final userKey = dataMap.keys.first;
 
           _databaseReference.child(userKey).update({
-            'moisture_value': 0, 
-            // 'plant_name': "",
-            'description': "",
-            'tips': "",
-
+            'moisture_value': 0,
+            'description': [],
+            'tips': [],
           }).then((_) {
             setState(() {
               soilMoistureLevel = 0;
-              description = "No data available.";
-              wateringTips = "";
+              description = ["No description available."];
+              wateringTips = [];
               plants = "";
             });
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('Soil moisture reset successfully')),
             );
           }).catchError((error) {
-            // Handle any errors during the update
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text('Error resetting soil moisture: $error')),
             );
@@ -140,7 +128,7 @@ class _SoilMoisturePageState extends State<SoilMoisturePage> {
         ],
         leading: IconButton(
           icon: const Icon(Icons.refresh, color: Colors.white),
-          onPressed: _resetSoilMoisture, // Reset function triggered here
+          onPressed: _resetSoilMoisture,
         ),
       ),
       body: Container(
@@ -157,60 +145,9 @@ class _SoilMoisturePageState extends State<SoilMoisturePage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  AnimatedContainer(
-                    duration: const Duration(milliseconds: 800),
-                    curve: Curves.easeInOut,
-                    child: Column(
-                      children: [
-                        Stack(
-                          alignment: Alignment.center,
-                          children: [
-                            Container(
-                              width: 180,
-                              height: 180,
-                              decoration: BoxDecoration(
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.green.withOpacity(0.5),
-                                    spreadRadius: 6,
-                                    blurRadius: 10,
-                                  ),
-                                ],
-                                shape: BoxShape.circle,
-                              ),
-                              child: CircularProgressIndicator(
-                                value: soilMoistureLevel / 100,
-                                strokeWidth: 16,
-                                backgroundColor: Colors.grey.shade300,
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                  _getMoistureColor(soilMoistureLevel),
-                                ),
-                              ),
-                            ),
-                            Text(
-                              '${soilMoistureLevel.toStringAsFixed(0)}%',
-                              style: const TextStyle(
-                                fontSize: 48,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 20),
-                        Text(
-                          _getMoistureDescription(soilMoistureLevel),
-                          style: const TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+                  _buildMoistureDisplay(),
                   const SizedBox(height: 20),
-                  _buildPlantAndWateringInfoCard(soilMoistureLevel),
+                  _buildPlantAndWateringInfoCard(),
                   if (isLoading) const CircularProgressIndicator(),
                 ],
               ),
@@ -222,7 +159,58 @@ class _SoilMoisturePageState extends State<SoilMoisturePage> {
     );
   }
 
-  Widget _buildPlantAndWateringInfoCard(double soilMoistureLevel) {
+  Widget _buildMoistureDisplay() {
+    return Column(
+      children: [
+        Stack(
+          alignment: Alignment.center,
+          children: [
+            Container(
+              width: 180,
+              height: 180,
+              decoration: BoxDecoration(
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.green.withOpacity(0.5),
+                    spreadRadius: 6,
+                    blurRadius: 10,
+                  ),
+                ],
+                shape: BoxShape.circle,
+              ),
+              child: CircularProgressIndicator(
+                value: soilMoistureLevel / 100,
+                strokeWidth: 16,
+                backgroundColor: Colors.grey.shade300,
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  _getMoistureColor(soilMoistureLevel),
+                ),
+              ),
+            ),
+            Text(
+              '${soilMoistureLevel.toStringAsFixed(0)}%',
+              style: const TextStyle(
+                fontSize: 48,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 20),
+        Text(
+          _getMoistureDescription(soilMoistureLevel),
+          style: const TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.w600,
+            color: Colors.white,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPlantAndWateringInfoCard() {
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Card(
@@ -243,38 +231,34 @@ class _SoilMoisturePageState extends State<SoilMoisturePage> {
                 ),
               ),
               const Divider(color: Colors.green),
-              const SizedBox(height: 10),
-              Text(
-                "Plant Name: $plants",
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+              // const SizedBox(height: 10),
+              // Text(
+              //   "Plant Name: $plants",
+              //   style: const TextStyle(
+              //     fontSize: 16,
+              //     fontWeight: FontWeight.bold,
+              //   ),
+              // ),
               const SizedBox(height: 10),
               const Text(
                 "Description:",
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 5),
-              Text(
-                description.isNotEmpty
-                    ? description
-                    : "No description available for this plant.",
-                style: const TextStyle(fontSize: 16),
-              ),
+              ...description.map((desc) => Text(
+                    "• $desc",
+                    style: const TextStyle(fontSize: 16),
+                  )),
               const SizedBox(height: 20),
               const Text(
                 "Tips:",
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 5),
-              Text(
-                wateringTips.isNotEmpty
-                    ? wateringTips
-                    : "No tips available for this moisture level.",
-                style: const TextStyle(fontSize: 16),
-              ),
+              ...wateringTips.map((tip) => Text(
+                    "• $tip",
+                    style: const TextStyle(fontSize: 16),
+                  )),
             ],
           ),
         ),

@@ -1,7 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:shimmer/shimmer.dart';
 import '../../widgets/components/bottom_navigation.dart';
-import 'shop.dart'; 
+import 'shop.dart';
 
 class ShopCollections extends StatelessWidget {
   const ShopCollections({super.key});
@@ -11,7 +12,15 @@ class ShopCollections extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Shop Collections'),
-        backgroundColor: const Color.fromARGB(255, 105, 173, 108),
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF6BCF63), Color(0xFF439A4D)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
         centerTitle: true,
         elevation: 4,
       ),
@@ -33,6 +42,7 @@ class ShopCollections extends StatelessWidget {
           final plantShops = snapshot.data!.docs;
 
           return ListView.builder(
+            padding: const EdgeInsets.all(10),
             itemCount: plantShops.length,
             itemBuilder: (context, index) {
               final shop = plantShops[index];
@@ -46,57 +56,109 @@ class ShopCollections extends StatelessWidget {
 
               // Image widget with fallback
               Widget shopImage = shopImageUrl.isNotEmpty
-                  ? Image.network(
-                      shopImageUrl,
-                      width: 100,
-                      height: 100,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        return const Icon(
-                          Icons.broken_image,
-                          size: 100,
-                          color: Colors.grey,
-                        );
-                      },
+                  ? ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Image.network(
+                        shopImageUrl,
+                        width: 100,
+                        height: 100,
+                        fit: BoxFit.cover,
+                        loadingBuilder: (context, child, progress) {
+                          if (progress == null) return child;
+                          return Shimmer.fromColors(
+                            baseColor: Colors.grey[300]!,
+                            highlightColor: Colors.grey[100]!,
+                            child: Container(
+                              width: 100,
+                              height: 100,
+                              color: Colors.white,
+                            ),
+                          );
+                        },
+                        errorBuilder: (context, error, stackTrace) {
+                          return const Icon(
+                            Icons.broken_image,
+                            size: 100,
+                            color: Colors.grey,
+                          );
+                        },
+                      ),
                     )
                   : const Icon(Icons.image, color: Colors.grey, size: 100);
 
               return Card(
-                margin: const EdgeInsets.all(10),
-                elevation: 4,
+                elevation: 6,
+                margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(16),
                 ),
-                child: ListTile(
-                  contentPadding: const EdgeInsets.all(12),
-                  leading: ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: shopImage,
-                  ),
-                  title: Text(
-                    shopName,
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  subtitle: Column(
+                child: Padding(
+                  padding: const EdgeInsets.all(10),
+                  child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(shopAddress, style: const TextStyle(fontSize: 14)),
-                      const SizedBox(height: 4),
-                      Text(shopContact, style: const TextStyle(fontSize: 14)),
-                      const SizedBox(height: 4),
-                      Text(shopPlantTypes, style: const TextStyle(fontSize: 14)),
-                    ],
-                  ),
-                  trailing: IconButton(
-                    icon: const Icon(Icons.arrow_forward, color: Colors.green),
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => ShopDetailsScreen(shop: shop),
+                      shopImage,
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              shopName,
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black87,
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              shopAddress,
+                              style: const TextStyle(
+                                fontSize: 14,
+                                color: Colors.black54,
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              shopContact,
+                              style: const TextStyle(
+                                fontSize: 14,
+                                color: Colors.black54,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Wrap(
+                              spacing: 6,
+                              children: shopPlantTypes
+                                  .split(',')
+                                  .map((type) => Chip(
+                                        label: Text(
+                                          type.trim(),
+                                          style: const TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                        backgroundColor: const Color(0xFF6BCF63),
+                                      ))
+                                  .toList(),
+                            ),
+                          ],
                         ),
-                      );
-                    },
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.arrow_forward, color: Colors.green),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => ShopDetailsScreen(shop: shop),
+                            ),
+                          );
+                        },
+                      ),
+                    ],
                   ),
                 ),
               );
