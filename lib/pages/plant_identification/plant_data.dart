@@ -16,17 +16,30 @@ class PlantDataDisplay extends StatelessWidget {
 
   Future<void> savePlantToFirestore(BuildContext context) async {
     try {
-      final String commonName = suggestion['details']?['common_names']?[0] ?? 'Unknown';
-      final String scientificName = suggestion['details']?['taxonomy']?['genus'] ?? 'Unknown';
-      final String description = suggestion['details']?['description']?['value'] ?? 'No description available.';
-      final String synonyms = suggestion['details']?['synonyms']?.sublist(0, 2).join(', ') ?? 'None';
-      final String edibleParts = suggestion['details']?['edible_parts']?.join(', ') ?? 'Not specified';
-      final String wateringNeeds = suggestion['details']?['best_watering'] ?? 'Not specified';
-      final String lightConditions = suggestion['details']?['best_light_condition'] ?? 'Not specified';
-      final String soilType = suggestion['details']?['best_soil_type'] ?? 'Not specified';
-      final String toxicityType = suggestion['details']?['toxicity'] ?? 'Not specified';
-      final String commonUses = suggestion['details']?['common_uses'] ?? 'Not specified';
-      final String culturalSignificance = suggestion['details']?['cultural_significance'] ?? 'Not specified';
+      final String commonName =
+          suggestion['details']?['common_names']?[0] ?? 'Unknown';
+      final String scientificName =
+          suggestion['details']?['taxonomy']?['genus'] ?? 'Unknown';
+      final String description = suggestion['details']?['description']
+              ?['value'] ??
+          'No description available.';
+      final String synonyms =
+          suggestion['details']?['synonyms']?.sublist(0, 2).join(', ') ??
+              'None';
+      final String edibleParts =
+          suggestion['details']?['edible_parts']?.join(', ') ?? 'Not specified';
+      final String wateringNeeds =
+          suggestion['details']?['best_watering'] ?? 'Not specified';
+      final String lightConditions =
+          suggestion['details']?['best_light_condition'] ?? 'Not specified';
+      final String soilType =
+          suggestion['details']?['best_soil_type'] ?? 'Not specified';
+      final String toxicityType =
+          suggestion['details']?['toxicity'] ?? 'Not specified';
+      final String commonUses =
+          suggestion['details']?['common_uses'] ?? 'Not specified';
+      final String culturalSignificance =
+          suggestion['details']?['cultural_significance'] ?? 'Not specified';
 
       final plantData = {
         'common_name': commonName,
@@ -49,9 +62,8 @@ class PlantDataDisplay extends StatelessWidget {
           .collection('plants');
 
       // Check if a plant with the same common name or scientific name already exists
-      final existingPlantQuery = await collectionRef
-          .where('common_name', isEqualTo: commonName)
-          .get();
+      final existingPlantQuery =
+          await collectionRef.where('common_name', isEqualTo: commonName).get();
 
       if (existingPlantQuery.docs.isNotEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -64,7 +76,8 @@ class PlantDataDisplay extends StatelessWidget {
       await collectionRef.add(plantData);
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('$commonName has been added to your collection!')),
+        SnackBar(
+            content: Text('$commonName has been added to your collection!')),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -72,7 +85,6 @@ class PlantDataDisplay extends StatelessWidget {
       );
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -109,7 +121,8 @@ class PlantDataDisplay extends StatelessWidget {
               // Plant common and scientific name
               Text(
                 suggestion['details']?['common_names']?[0] ?? 'Unknown',
-                style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                style:
+                    const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 5),
               Text(
@@ -124,7 +137,8 @@ class PlantDataDisplay extends StatelessWidget {
               ),
               const SizedBox(height: 10),
               Text(
-                suggestion['details']?['description']?['value'] ?? 'No description available.',
+                suggestion['details']?['description']?['value'] ??
+                    'No description available.',
                 style: const TextStyle(fontSize: 14),
               ),
               const SizedBox(height: 20),
@@ -134,16 +148,28 @@ class PlantDataDisplay extends StatelessWidget {
               // Cool Facts section
               _buildCoolFactsSection(),
               const SizedBox(height: 20),
-              ElevatedButton.icon(
-                onPressed: () => savePlantToFirestore(context),
-                icon: const Icon(Icons.add, color: Colors.white),
-                label: const Text(
-                  "Save to Collection",
-                  style: TextStyle(fontSize: 16, color: Colors.white),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green,
-                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+              Center(
+                child: ElevatedButton.icon(
+                  onPressed: () => savePlantToFirestore(context),
+                  icon: const Icon(Icons.add, color: Colors.white, size: 20),
+                  label: const Text(
+                    "Save to Collection",
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 40, vertical: 14),
+                    backgroundColor: Colors.green,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                    elevation: 6,
+                    shadowColor: Colors.black.withOpacity(0.3),
+                  ),
                 ),
               ),
             ],
@@ -194,20 +220,64 @@ class PlantDataDisplay extends StatelessWidget {
           children: [
             const Text(
               "Details: 🌱",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.green),
+              style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.green),
             ),
             const SizedBox(height: 12),
-            _buildDetailRow("Synonyms:", suggestion['details']?['synonyms']?.sublist(0, 2).join(', ') ?? 'None', Icons.library_books),
-            const Divider(color: Colors.grey, indent: 15, endIndent: 15,),
-            _buildDetailRow("Edible Parts:", suggestion['details']?['edible_parts']?.join(', ') ?? 'Not specified', Icons.fastfood),
-            const Divider(color: Colors.grey, indent: 15, endIndent: 15,),
-            _buildDetailRow("Watering Needs:", suggestion['details']?['best_watering'] ?? 'Not specified', Icons.water),
-            const Divider(color: Colors.grey, indent: 15, endIndent: 15,),
-            _buildDetailRow("Light Condition:", suggestion['details']?['best_light_condition'] ?? 'Not specified', Icons.wb_sunny),
-            const Divider(color: Colors.grey, indent: 15, endIndent: 15,),
-            _buildDetailRow("Soil Type:", suggestion['details']?['best_soil_type'] ?? 'Not specified', Icons.landscape),
-            const Divider(color: Colors.grey, indent: 15, endIndent: 15,),
-            _buildDetailRow("Toxicity:", suggestion['details']?['toxicity'] ?? 'Not specified', Icons.warning),
+            _buildDetailRow(
+                "Synonyms:",
+                suggestion['details']?['synonyms']?.sublist(0, 2).join(', ') ??
+                    'None',
+                Icons.library_books),
+            const Divider(
+              color: Colors.grey,
+              indent: 15,
+              endIndent: 15,
+            ),
+            _buildDetailRow(
+                "Edible Parts:",
+                suggestion['details']?['edible_parts']?.join(', ') ??
+                    'Not specified',
+                Icons.fastfood),
+            const Divider(
+              color: Colors.grey,
+              indent: 15,
+              endIndent: 15,
+            ),
+            _buildDetailRow(
+                "Watering Needs:",
+                suggestion['details']?['best_watering'] ?? 'Not specified',
+                Icons.water),
+            const Divider(
+              color: Colors.grey,
+              indent: 15,
+              endIndent: 15,
+            ),
+            _buildDetailRow(
+                "Light Condition:",
+                suggestion['details']?['best_light_condition'] ??
+                    'Not specified',
+                Icons.wb_sunny),
+            const Divider(
+              color: Colors.grey,
+              indent: 15,
+              endIndent: 15,
+            ),
+            _buildDetailRow(
+                "Soil Type:",
+                suggestion['details']?['best_soil_type'] ?? 'Not specified',
+                Icons.landscape),
+            const Divider(
+              color: Colors.grey,
+              indent: 15,
+              endIndent: 15,
+            ),
+            _buildDetailRow(
+                "Toxicity:",
+                suggestion['details']?['toxicity'] ?? 'Not specified',
+                Icons.warning),
           ],
         ),
       ),
@@ -228,12 +298,28 @@ class PlantDataDisplay extends StatelessWidget {
           children: [
             const Text(
               "Cool Facts!",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.green),
+              style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.green),
             ),
             const SizedBox(height: 10),
-            _buildDetailRow("Common Uses:", suggestion['details']?['common_uses'] ?? 'Not specified', Icons.business, trim: false),
-            const Divider(color: Colors.grey, indent: 15, endIndent: 15,),
-            _buildDetailRow("Cultural Significance:", suggestion['details']?['cultural_significance'] ?? 'Not specified', Icons.group, trim: false),
+            _buildDetailRow(
+                "Common Uses:",
+                suggestion['details']?['common_uses'] ?? 'Not specified',
+                Icons.business,
+                trim: false),
+            const Divider(
+              color: Colors.grey,
+              indent: 15,
+              endIndent: 15,
+            ),
+            _buildDetailRow(
+                "Cultural Significance:",
+                suggestion['details']?['cultural_significance'] ??
+                    'Not specified',
+                Icons.group,
+                trim: false),
           ],
         ),
       ),
@@ -241,7 +327,8 @@ class PlantDataDisplay extends StatelessWidget {
   }
 
   // Detail row with icon, title, and value with optional trimming
-  Widget _buildDetailRow(String title, String value, IconData icon, {bool trim = true}) {
+  Widget _buildDetailRow(String title, String value, IconData icon,
+      {bool trim = true}) {
     String displayValue = trim ? (value.split('.').first + '.') : value;
 
     return Row(
@@ -255,7 +342,8 @@ class PlantDataDisplay extends StatelessWidget {
             children: [
               Text(
                 title,
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                style:
+                    const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 2),
               Text(
